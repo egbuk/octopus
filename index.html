@@ -1,0 +1,22 @@
+<html>
+
+<head>
+    <title>Octopus</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+</head>
+
+<body>
+    <div class="overlay">
+        <div class="track-toggle prev" onclick="Player.prevTrack()"></div>
+        <div class="play-toggle play" onclick="Player.togglePlay()"></div>
+        <div class="track-toggle next" onclick="Player.nextTrack()"></div>
+        <a id="trackInfo" class="overlay-labels" href="#" target="_blank"></a>
+        <div id="loadStatusInfo" class="overlay-labels">Downloading...</div>
+    </div>
+    <canvas id="view"></canvas>
+    <script src="script.js"></script>
+</body>
+
+</html>
