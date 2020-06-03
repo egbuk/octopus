@@ -46,7 +46,7 @@ var Player = {
             this.analyser.fftSize = 2048;
             this.source = this.context.createBufferSource();
             this.destination = this.context.destination;
-            this.loadTrack(0);
+            this.loadTrack(0, false);
 
             this.gainNode = this.context.createGain();
             this.source.connect(this.gainNode);
@@ -59,7 +59,7 @@ var Player = {
         }
     },
 
-    loadTrack(index) {
+    loadTrack(index, play = true) {
         var self = this;
         var request = new XMLHttpRequest();
         var track = this.tracks[index];
@@ -94,7 +94,13 @@ var Player = {
                 self.source.disconnect(self.gainNode);
                 self.source = newSource;
                 self.firstLaunch = true;
-                Player.play();
+                if (play) {
+                    Player.play();
+                } else {
+                    const playToggle = document.querySelector('.play-toggle');
+                    playToggle.style.opacity = 0.7;
+                    setTimeout(() => { playToggle.style.opacity = null; }, 1000);
+                }
             });
         };
 
