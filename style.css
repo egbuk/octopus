@@ -110,3 +110,8 @@ body {
     top: 5px;
     left: 5px;
 }
+
+#githubLink {
+    bottom: 5px;
+    right: 5px;
+}
