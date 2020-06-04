@@ -127,10 +127,17 @@ const Player = {
         };
         request.onerror = () => {
             self.loadProgress = null;
-            loadStatusInfo.innerText = 'Network error: unable to download audio! Retrying in 5 seconds...';
-            self.timeouts.push(setTimeout(() => {
-                self.loadTrack(index, play);
-            }, 5000));
+            let seconds = 5;
+            const callback = () => {
+                if (seconds === 0) {
+                    self.loadTrack(index, play);
+                    return;
+                }
+                loadStatusInfo.innerText = `Network error: unable to download audio! Retrying in ${seconds} ${seconds > 1 ? 'seconds' : 'second'}...`;
+                seconds--;
+                self.timeouts.push(setTimeout(callback, 1000));
+            }
+            callback();
         }
 
         request.send();
