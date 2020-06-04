@@ -16,13 +16,13 @@ var Player = {
             url: "media/2.mp3"
         },
         {
-            title: 'MantisMash - Spring Bass',
-            link: 'https://mantismash.bandcamp.com/track/spring-bass',
+            title: 'MantisMash - Is This Real Life? (432hz)',
+            link: 'https://mantismash.bandcamp.com/track/is-this-real-life-432hz',
             url: "media/3.mp3"
         },
         {
-            title: 'MantisMash - Is This Real Life? (432hz)',
-            link: 'https://mantismash.bandcamp.com/track/is-this-real-life-432hz',
+            title: 'MantisMash - Spring Bass',
+            link: 'https://mantismash.bandcamp.com/track/spring-bass',
             url: "media/4.mp3"
         },
         {
@@ -46,7 +46,7 @@ var Player = {
             this.analyser.fftSize = 2048;
             this.source = this.context.createBufferSource();
             this.destination = this.context.destination;
-            this.loadTrack(0, false);
+            this.loadTrack(parseInt(location.hash.slice(1)) || 0, false);
 
             this.gainNode = this.context.createGain();
             this.source.connect(this.gainNode);
@@ -60,6 +60,11 @@ var Player = {
     },
 
     loadTrack(index, play = true) {
+        if (index !== 0) {
+            location.hash = index;
+        } else {
+            location.hash = '';
+        }
         var self = this;
         var request = new XMLHttpRequest();
         var track = this.tracks[index];
