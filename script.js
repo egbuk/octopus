@@ -3,11 +3,8 @@
 const playToggle = document.querySelector('.overlay .play-toggle');
 // noinspection JSUnusedGlobalSymbols
 const Player = {
-
     buffer: null,
-
     duration: 0,
-
     tracks: [{
             title: 'MantisMash - You Are These Vibrations',
             link: 'https://mantismash.bandcamp.com/track/you-are-these-vibrations',
@@ -34,7 +31,6 @@ const Player = {
             url: "media/5.mp3"
         }
     ],
-
     init() {
         // noinspection JSUnresolvedVariable
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -355,11 +351,12 @@ const Octopus = {
 function init() {
     Octopus.init(40, 13, 50, 1000);
 
-    let canvas = document.getElementById('view');
-    let view = canvas.getContext('2d');
+    const canvas = document.getElementById('view');
+    const view = canvas.getContext('2d');
+    const m_canvas = document.createElement('canvas');
+    const ctx = m_canvas.getContext('2d');
+
     let phase = 0;
-    let m_canvas = document.createElement('canvas');
-    let ctx = m_canvas.getContext('2d');
 
     let zoomFactor;
     let xOffset;
