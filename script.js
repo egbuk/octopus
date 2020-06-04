@@ -6,6 +6,7 @@ const Player = {
     buffer: null,
     duration: 0,
     timeouts: [],
+    stopped: true,
     tracks: [{
             title: 'MantisMash - You Are These Vibrations',
             link: 'https://mantismash.bandcamp.com/track/you-are-these-vibrations',
@@ -60,6 +61,7 @@ const Player = {
         }
     },
     loadTrack(index, play = true) {
+        const playAfterLoad = play;
         if (index !== 0) {
             location.hash = index;
         } else {
@@ -111,7 +113,7 @@ const Player = {
                 self.source.disconnect(self.gainNode);
                 self.source = newSource;
                 self.firstLaunch = true;
-                if (play) {
+                if (playAfterLoad) {
                     Player.play();
                 } else {
                     playToggle.style.opacity = '0.7';
@@ -162,7 +164,18 @@ const Player = {
     },
 
     play() {
-        this.context.resume && this.context.resume();
+        Player.stopped = false;
+        this.context.resume && this.context.resume().then(() => {
+            setTimeout(() => {
+                if (Player.stopped) {
+                    return;
+                }
+                if (Player.context.state !== 'running') {
+                    console.log('Firefox bug workaround: force trigger play if context.state is wrong');
+                    Player.play();
+                }
+            }, 1000);
+        });
         if (this.firstLaunch) {
             this.source.start();
             this.firstLaunch = false;
@@ -179,6 +192,7 @@ const Player = {
     },
 
     stop() {
+        Player.stopped = true;
         this.context.currentTime = 0;
         this.context.suspend().then(() => playToggle.classList.add('play'));
     },
