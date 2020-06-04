@@ -7,6 +7,7 @@ const Player = {
     duration: 0,
     timeouts: [],
     stopped: true,
+    loadProgress: 0,
     tracks: [{
             title: 'MantisMash - You Are These Vibrations',
             link: 'https://mantismash.bandcamp.com/track/you-are-these-vibrations',
@@ -85,7 +86,7 @@ const Player = {
                 return;
             }
             if (!e.lengthComputable) {
-                self.loadProgress = null;
+                self.loadProgress = 0;
                 return;
             }
             self.loadProgress = e.loaded / e.total;
@@ -431,7 +432,7 @@ function init() {
         paths.forEach((path) => {
             ctx.beginPath();
             ctx.moveTo(xCenter, yCenter);
-            if (Player.loadProgress) {
+            if (Player.loadProgress !== null) {
                 let sliceSize = Math.ceil(path.length / 2 * Player.loadProgress);
                 if (sliceSize > lastSliceSize) {
                     animateSlices += sliceSize - lastSliceSize;
@@ -474,7 +475,7 @@ function init() {
             ctx.stroke();
             ctx.fill();
         });
-        if (Player.loadProgress) {
+        if (Player.loadProgress !== null) {
             Octopus.generatePaths(xCenter, yCenter, 30, 180, zoomFactor).forEach((path) => {
                 ctx.beginPath();
                 ctx.moveTo(xCenter, yCenter);
