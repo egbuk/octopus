@@ -97,7 +97,6 @@ var Player = {
                 if (play) {
                     Player.play();
                 } else {
-                    const playToggle = document.querySelector('.play-toggle');
                     playToggle.style.opacity = 0.7;
                     setTimeout(() => { playToggle.style.opacity = null; }, 1000);
                 }
