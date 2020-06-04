@@ -1,5 +1,8 @@
+/** @var trackInfo HTMLElement */
+/** @var loadStatusInfo HTMLElement */
 const playToggle = document.querySelector('.overlay .play-toggle');
-var Player = {
+// noinspection JSUnusedGlobalSymbols
+const Player = {
 
     buffer: null,
 
@@ -33,6 +36,7 @@ var Player = {
     ],
 
     init() {
+        // noinspection JSUnresolvedVariable
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
         this.context = new AudioContext();
         this.context.suspend && this.context.suspend();
@@ -65,9 +69,10 @@ var Player = {
         } else {
             location.hash = '';
         }
-        var self = this;
-        var request = new XMLHttpRequest();
-        var track = this.tracks[index];
+        const self = this;
+        clearTimeout(self.reloadTimer);
+        const request = new XMLHttpRequest();
+        const track = this.tracks[index];
         this.currentSongIndex = index;
         trackInfo.href = track.link;
         trackInfo.innerText = track.title;
@@ -84,7 +89,7 @@ var Player = {
             }
             self.loadProgress = e.loaded / e.total;
         };
-        loadStatusInfo.style.opacity = 1;
+        loadStatusInfo.style.opacity = '1';
         loadStatusInfo.innerText = 'Downloading...';
         request.onload = () => {
             if (Player.lastDecoding !== track.url) {
@@ -97,7 +102,7 @@ var Player = {
                     return;
                 }
                 loadStatusInfo.innerText = 'Done.';
-                loadStatusInfo.style.opacity = 0;
+                loadStatusInfo.style.opacity = '0';
                 Player.stop();
                 const newSource = self.context.createBufferSource();
                 newSource.connect(self.gainNode);
@@ -108,11 +113,22 @@ var Player = {
                 if (play) {
                     Player.play();
                 } else {
-                    playToggle.style.opacity = 0.7;
+                    playToggle.style.opacity = '0.7';
                     setTimeout(() => { playToggle.style.opacity = null; }, 1000);
                 }
+            }).catch(() => {
+                self.loadProgress = null;
+                loadStatusInfo.innerText = 'Error: unable to decode audio!';
+                loadStatusInfo.style.opacity = '0';
             });
         };
+        request.onerror = () => {
+            self.loadProgress = null;
+            loadStatusInfo.innerText = 'Network error: unable to download audio! Retrying in 5 seconds...';
+            self.reloadTimer = setTimeout(() => {
+                self.loadTrack(index, play);
+            }, 5000);
+        }
 
         request.send();
     },
@@ -154,12 +170,11 @@ var Player = {
 
     stop() {
         this.context.currentTime = 0;
-        this.context.suspend();
-        playToggle.classList.add('play');
+        this.context.suspend().then(() => playToggle.classList.add('play'));
     },
 
     pause() {
-        this.context.suspend();
+        return this.context.suspend();
     },
 
     mute() {
@@ -171,7 +186,7 @@ var Player = {
     },
 
     initHandlers() {
-        var self = this;
+        const self = this;
 
         self.context.onstatechange = function() {
             if (self.context.state !== 'running') {
@@ -186,7 +201,7 @@ function degToRad(deg) {
     return (deg / 360) * 2 * Math.PI;
 }
 
-var Octopus = {
+const Octopus = {
     frequencyData: [],
     dividedFreqMax: [],
     dividedFreqMaxEver: [],
@@ -207,7 +222,7 @@ var Octopus = {
             }
             self.legs.push(leg);
         }
-        self.dividedFreqMax.length = self.legs.length + 3; // overwise last leg may be inactive due to mp3 compression frequency cutoff
+        self.dividedFreqMax.length = self.legs.length + 3; // otherwise last leg may be inactive due to mp3 compression frequency cutoff
         self.dividedFreqMaxEver.length = self.dividedFreqMax.length;
         self.maxFreqTransition.length = self.dividedFreqMax.length;
         for (let i = 0; i < self.dividedFreqMax.length; i++) {
@@ -305,15 +320,15 @@ var Octopus = {
                 yCurrent += Math.sin(degToRad(addedAngle)) * (jointLength / 2) * zoomFactor;
             });
             let finalLegResult = [];
-            legResult.left.forEach((coord) => {
-                finalLegResult.push(coord);
+            legResult.left.forEach((point) => {
+                finalLegResult.push(point);
             });
             finalLegResult.push({
                 x: Math.round(xCurrent),
                 y: Math.round(yCurrent)
             });
-            legResult.right.reverse().forEach((coord) => {
-                finalLegResult.push(coord);
+            legResult.right.reverse().forEach((point) => {
+                finalLegResult.push(point);
             });
             result.push(finalLegResult);
         });
@@ -340,22 +355,21 @@ var Octopus = {
 function init() {
     Octopus.init(40, 13, 50, 1000);
 
-    var canvas = document.getElementById('view');
-    var view = canvas.getContext('2d');
-    var phase = 0;
-    var m_canvas = document.createElement('canvas');
-    var ctx = m_canvas.getContext('2d');
+    let canvas = document.getElementById('view');
+    let view = canvas.getContext('2d');
+    let phase = 0;
+    let m_canvas = document.createElement('canvas');
+    let ctx = m_canvas.getContext('2d');
 
-    var zoomFactor;
-    var xOffset;
-    var yOffset;
+    let zoomFactor;
+    let xOffset;
+    let yOffset;
     const desiredWidth = 840; // computed once by experiment
     const desiredHeight = 840;
-    const baseCenter = 420;
-    var xCenter;
-    var yCenter;
+    let xCenter;
+    let yCenter;
 
-    function resize(event) {
+    function resize() {
         canvas.height = canvas.clientHeight;
         canvas.width = canvas.clientWidth;
         m_canvas.height = canvas.height;
@@ -388,12 +402,8 @@ function init() {
 
         let newTime = (new Date).getTime();
         Octopus.animate(newTime - lastTime);
-        let widthMultiplier = 1;
-        if (Player.loadProgress) {
-            widthMultiplier *= Player.loadProgress;
-        }
         let paths = Octopus.generatePaths(xCenter, yCenter, 30, 180, zoomFactor); // 840 x 735
-        paths.forEach((path, i) => {
+        paths.forEach((path) => {
             ctx.beginPath();
             ctx.moveTo(xCenter, yCenter);
             if (Player.loadProgress) {
@@ -440,7 +450,7 @@ function init() {
             ctx.fill();
         });
         if (Player.loadProgress) {
-            Octopus.generatePaths(xCenter, yCenter, 30, 180, zoomFactor).forEach((path, i) => {
+            Octopus.generatePaths(xCenter, yCenter, 30, 180, zoomFactor).forEach((path) => {
                 ctx.beginPath();
                 ctx.moveTo(xCenter, yCenter);
                 path.forEach((coords) => {
