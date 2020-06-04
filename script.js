@@ -175,7 +175,6 @@ var Player = {
     }
 };
 Player.init();
-Player.play();
 
 function degToRad(deg) {
     return (deg / 360) * 2 * Math.PI;
