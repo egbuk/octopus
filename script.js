@@ -5,6 +5,7 @@ const playToggle = document.querySelector('.overlay .play-toggle');
 const Player = {
     buffer: null,
     duration: 0,
+    timeouts: [],
     tracks: [{
             title: 'MantisMash - You Are These Vibrations',
             link: 'https://mantismash.bandcamp.com/track/you-are-these-vibrations',
@@ -58,7 +59,6 @@ const Player = {
             console.log(e);
         }
     },
-
     loadTrack(index, play = true) {
         if (index !== 0) {
             location.hash = index;
@@ -66,7 +66,10 @@ const Player = {
             location.hash = '';
         }
         const self = this;
-        clearTimeout(self.reloadTimer);
+        let timeout;
+        while (timeout = self.timeouts.pop()) {
+            clearTimeout(timeout);
+        }
         const request = new XMLHttpRequest();
         const track = this.tracks[index];
         this.currentSongIndex = index;
@@ -98,7 +101,9 @@ const Player = {
                     return;
                 }
                 loadStatusInfo.innerText = 'Done.';
-                loadStatusInfo.style.opacity = '0';
+                self.timeouts.push(setTimeout(() => {
+                    loadStatusInfo.style.opacity = '0';
+                }, 1000));
                 Player.stop();
                 const newSource = self.context.createBufferSource();
                 newSource.connect(self.gainNode);
@@ -115,15 +120,17 @@ const Player = {
             }).catch(() => {
                 self.loadProgress = null;
                 loadStatusInfo.innerText = 'Error: unable to decode audio!';
-                loadStatusInfo.style.opacity = '0';
+                self.timeouts.push(setTimeout(() => {
+                    loadStatusInfo.style.opacity = '0';
+                }, 1000));
             });
         };
         request.onerror = () => {
             self.loadProgress = null;
             loadStatusInfo.innerText = 'Network error: unable to download audio! Retrying in 5 seconds...';
-            self.reloadTimer = setTimeout(() => {
+            self.timeouts.push(setTimeout(() => {
                 self.loadTrack(index, play);
-            }, 5000);
+            }, 5000));
         }
 
         request.send();
