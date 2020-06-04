@@ -73,7 +73,11 @@ var Player = {
         trackInfo.innerText = track.title;
         request.open('GET', track.url, true);
         request.responseType = 'arraybuffer';
+        Player.lastDecoding = track.url;
         request.onprogress = (e) => {
+            if (Player.lastDecoding !== track.url) {
+                return;
+            }
             if (!e.lengthComputable) {
                 self.loadProgress = null;
                 return;
@@ -83,8 +87,10 @@ var Player = {
         loadStatusInfo.style.opacity = 1;
         loadStatusInfo.innerText = 'Downloading...';
         request.onload = () => {
+            if (Player.lastDecoding !== track.url) {
+                return;
+            }
             loadStatusInfo.innerText = 'Decoding...';
-            Player.lastDecoding = track.url;
             self.context.decodeAudioData(request.response, (buffer) => {
                 self.loadProgress = null;
                 if (Player.lastDecoding !== track.url) {
@@ -285,7 +291,7 @@ var Octopus = {
             };
             let xCurrent = xCenter;
             let yCurrent = yCenter;
-            leg.forEach((joint, i) => {
+            leg.forEach((joint) => {
                 const addedAngle = joint.angle + addAngle;
                 legResult.left.push({
                     x: Math.round(xCurrent + Math.cos(degToRad(addedAngle - 90)) * (joint.width / 2 * widthMultiplier) * zoomFactor),
