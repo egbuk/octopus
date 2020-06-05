@@ -99,10 +99,10 @@ const Player = {
             }
             loadStatusInfo.innerText = 'Decoding...';
             self.context.decodeAudioData(request.response, (buffer) => {
-                self.loadProgress = null;
                 if (Player.lastDecoding !== track.url) {
                     return;
                 }
+                self.loadProgress = null;
                 loadStatusInfo.innerText = 'Done.';
                 self.timeouts.push(setTimeout(() => {
                     loadStatusInfo.style.opacity = '0';
