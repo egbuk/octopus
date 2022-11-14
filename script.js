@@ -1,12 +1,36 @@
+const tt = document.querySelectorAll('.track-toggle');
+const h = document.querySelectorAll('.hoverable')
+const restoreMouse = (e) => {
+    if ((e.sourceCapabilities || {}).firesTouchEvents || e.target.classList.contains('hoverable'))
+        return;
+    e.target.classList.add('hoverable');
+    e.target.removeEventListener('mousemove', restoreMouse);
+};
+h.forEach(l => {
+    l.addEventListener('touchstart', (e) => {
+        const c = e.target.classList;
+        if (c.contains('hoverable')) {
+            c.remove('hoverable');
+            l.addEventListener('mousemove', restoreMouse);
+        }
+        c.add('touched');
+    }, {passive: true});
+    l.addEventListener('touchend', (e) => {
+        setTimeout(() => e.target.classList.remove('touched'), 500);
+    }, {passive: true});
+})
 /** @var trackInfo HTMLElement */
 /** @var loadStatusInfo HTMLElement */
 const playToggle = document.querySelector('.overlay .play-toggle');
+const trackToggle = document.querySelectorAll('.track-toggle');
 // noinspection JSUnusedGlobalSymbols
 const Player = {
+    request: null,
     buffer: null,
     duration: 0,
     timeouts: [],
     stopped: true,
+    loaded: false,
     loadProgress: 0,
     tracks: [{
             title: 'MantisMash - You Are These Vibrations',
@@ -49,40 +73,51 @@ const Player = {
             this.analyser.fftSize = 2048;
             this.source = this.context.createBufferSource();
             this.destination = this.context.destination;
-            this.loadTrack(parseInt(location.hash.slice(1)) || 0, false);
-
             this.gainNode = this.context.createGain();
             this.source.connect(this.gainNode);
             this.gainNode.connect(this.analyser);
             this.gainNode.connect(this.destination);
-
+            if (window===window.top) {
+                playToggle.style.display = 'none';
+                this.loadTrack(parseInt(location.hash.slice(1)) || 0, false);
+            } else {
+                loadStatusInfo.style.opacity = '0';
+                playToggle.classList.add('preload', 'transition');
+            }
             this.initHandlers();
         } catch (e) {
             console.log(e);
         }
     },
     loadTrack(index, play = true) {
+        const self = this;
+        if (!self.loaded) {
+          playToggle.style.cursor = 'default';
+          const opacityTimeout = setTimeout(() => playToggle.style.opacity = 0, 1000);
+        }
         const playAfterLoad = play;
         if (index !== 0) {
             location.hash = index;
         } else {
             location.hash = '';
         }
-        const self = this;
+        if (self.request) self.request.abort();
+        Player.loadProgress = 0;
         let timeout;
         while (timeout = self.timeouts.pop()) {
             clearTimeout(timeout);
         }
         const request = new XMLHttpRequest();
-        const track = this.tracks[index];
-        this.currentSongIndex = index;
+        self.request = request;
+        const track = self.tracks[index];
+        self.currentSongIndex = index;
         trackInfo.href = track.link;
         trackInfo.innerText = track.title;
         request.open('GET', track.url, true);
         request.responseType = 'arraybuffer';
         Player.lastDecoding = track.url;
         request.onprogress = (e) => {
-            if (Player.lastDecoding !== track.url) {
+            if (Player.currentSongIndex !== index) {
                 return;
             }
             if (!e.lengthComputable) {
@@ -98,16 +133,31 @@ const Player = {
                 return;
             }
             loadStatusInfo.innerText = 'Decoding...';
+            trackToggle.forEach(e => {
+                e.style.cursor = 'default';
+                e.style.filter = 'contrast(0.3)';
+            });
             self.context.decodeAudioData(request.response, (buffer) => {
                 if (Player.lastDecoding !== track.url) {
                     return;
                 }
                 self.loadProgress = null;
                 loadStatusInfo.innerText = 'Done.';
+                if (!self.loaded) {
+                     tt.forEach(t => {
+                         t.style.display = null;
+                         setTimeout(() => t.classList.add('touched'), 1);
+                         setTimeout(() => t.classList.remove('touched'), 1000);
+                    });
+                    if (window===window.top) {
+                       playToggle.style.display = null;
+                    }
+                    self.loaded = true;
+                }
                 self.timeouts.push(setTimeout(() => {
                     loadStatusInfo.style.opacity = '0';
                 }, 1000));
-                Player.stop();
+                Player.stop(!playAfterLoad);
                 const newSource = self.context.createBufferSource();
                 newSource.connect(self.gainNode);
                 newSource.buffer = buffer;
@@ -117,8 +167,10 @@ const Player = {
                 if (playAfterLoad) {
                     Player.play();
                 } else {
-                    playToggle.style.opacity = '0.7';
-                    setTimeout(() => { playToggle.style.opacity = null; }, 1000);
+                    setTimeout(() => playToggle.classList.add('preload'), 1);
+                    setTimeout(() => playToggle.classList.add('transition'), 500);
+                    setTimeout(() => playToggle.classList.remove('preload'), 1000);
+                    setTimeout(() => playToggle.classList.remove('transition'), 1500);
                 }
             }).catch(() => {
                 self.loadProgress = null;
@@ -126,10 +178,19 @@ const Player = {
                 self.timeouts.push(setTimeout(() => {
                     loadStatusInfo.style.opacity = '0';
                 }, 1000));
+            }).finally(() => {
+                trackToggle.forEach(e => {
+                    e.style.cursor = null;
+                    e.style.filter = null;
+                });
+                playToggle.style.opacity = null;
+                playToggle.style.cursor = null;
             });
+            self.request = null;
         };
         request.onerror = () => {
             self.loadProgress = null;
+            self.request = null;
             let seconds = 5;
             const callback = () => {
                 if (seconds === 0) {
@@ -147,6 +208,7 @@ const Player = {
     },
 
     nextTrack() {
+        if (trackToggle.item(1).style.cursor === 'default') return;
         ++this.currentSongIndex;
         if (this.currentSongIndex === this.tracks.length) {
             this.currentSongIndex = 0;
@@ -156,6 +218,7 @@ const Player = {
     },
 
     prevTrack() {
+        if (trackToggle.item(0).style.cursor === 'default') return;
         --this.currentSongIndex;
         if (this.currentSongIndex === -1) {
             this.currentSongIndex = this.tracks.length - 1;
@@ -163,7 +226,6 @@ const Player = {
 
         this.loadTrack(this.currentSongIndex);
     },
-
     play() {
         Player.stopped = false;
         this.context.resume && this.context.resume().then(() => {
@@ -178,13 +240,18 @@ const Player = {
             }, 1000);
         });
         if (this.firstLaunch) {
-            this.source.start();
             this.firstLaunch = false;
+            if (!this.loaded) {
+                this.loadTrack(parseInt(location.hash.slice(1)) || 0, true);
+            } else {
+                this.source.start();
+            }
         }
-        playToggle.classList.remove('play');
+        playToggle.classList.remove('preload', 'transition', 'play');
     },
 
     togglePlay() {
+        if (playToggle.style.cursor === 'default') return;
         if (Player.context.state === 'running') {
             Player.stop();
         } else {
@@ -192,10 +259,10 @@ const Player = {
         }
     },
 
-    stop() {
+    stop(togglePlay = true) {
         Player.stopped = true;
         this.context.currentTime = 0;
-        this.context.suspend().then(() => playToggle.classList.add('play'));
+        this.context.suspend().then(() => togglePlay ? playToggle.classList.add('play') : null);
     },
 
     pause() {
@@ -394,10 +461,9 @@ function init() {
     const desiredHeight = 840;
     let xCenter;
     let yCenter;
-
     function resize() {
-        canvas.height = canvas.clientHeight;
-        canvas.width = canvas.clientWidth;
+        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth;
         m_canvas.height = canvas.height;
         m_canvas.width = canvas.width;
         if (m_canvas.width / m_canvas.height > (desiredWidth / desiredHeight)) {
@@ -421,8 +487,15 @@ function init() {
     let lastSliceSize = 0;
     let animateSlices = 0;
     let sliceAnimateProgress = 0;
+    let progressTrack = Player.currentSongIndex || 0;
 
     function render() {
+        if (progressTrack != Player.currentSongIndex) {
+            lastSliceSize = 0;
+            animateSlices = 0;
+            sliceAnimateProgress = 0;
+            progressTrack = Player.currentSongIndex || 0;
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         phase++;
 

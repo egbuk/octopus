@@ -1,11 +1,12 @@
 body {
     padding: 0;
     margin: 0;
+    overflow: hidden;
 }
 
 #view {
-    height: 100vh;
-    width: 100vw;
+    height: max-content;
+    width: max-content;
     padding: 0;
     margin: 0;
 }
@@ -29,21 +30,21 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    width: 64px;
-    height: 64px;
-    background-color: white;
+    width: calc(min(30vw, 30vh));
+    height: calc(min(30vw, 30vh));
+    backdrop-filter: blur(3px);
     background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE2LjAuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCINCgkgd2lkdGg9IjQ1Ljk3NXB4IiBoZWlnaHQ9IjQ1Ljk3NXB4IiB2aWV3Qm94PSIwIDAgNDUuOTc1IDQ1Ljk3NSIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDUuOTc1IDQ1Ljk3NTsiDQoJIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGc+DQoJPGc+DQoJCTxwYXRoIGQ9Ik0xMy45ODcsMGMtMi43NjIsMC01LDIuMjM5LTUsNXYzNS45NzVjMCwyLjc2MywyLjIzOCw1LDUsNXM1LTIuMjM4LDUtNVY1QzE4Ljk4NywyLjIzOCwxNi43NSwwLDEzLjk4NywweiIvPg0KCQk8cGF0aCBkPSJNMzEuOTg3LDBjLTIuNzYyLDAtNSwyLjIzOS01LDV2MzUuOTc1YzAsMi43NjIsMi4yMzgsNSw1LDVzNS0yLjIzOCw1LTVWNUMzNi45ODcsMi4yMzksMzQuNzQ5LDAsMzEuOTg3LDB6Ii8+DQoJPC9nPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPC9zdmc+DQo=");
     margin: auto;
     border-radius: 50%;
     opacity: 0;
     transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    background-size: 32px;
+    background-size: calc(min(15vw, 15vh));
     background-repeat: no-repeat;
     background-position: center;
 }
 
-.overlay .play-toggle:hover {
+.overlay .play-toggle.touched, .overlay .play-toggle.hoverable:hover {
     opacity: 1;
 }
 
@@ -75,7 +76,20 @@ body {
     background-position: right center;
 }
 
-.overlay .track-toggle:hover {
+.play-toggle.play.preload {
+    background-color: rgba(255, 255, 255, 0.3);
+    opacity: 1;
+}
+
+.play-toggle.play.transition {
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.overlay .play-toggle, .play-toggle.play.touched, .play-toggle.play.transition.hoverable:hover {
+    background-color: #ffffffbf;
+}
+
+.overlay .track-toggle.touched, .overlay .track-toggle.hoverable:hover {
     opacity: 1;
     cursor: pointer;
 }
